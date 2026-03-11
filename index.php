@@ -603,6 +603,9 @@ const currentTimeEl=document.getElementById("currentTime")
 const durationEl=document.getElementById("duration")
 const isMobile=/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.matchMedia("(max-width: 768px)").matches
 const controlsRow=document.querySelector(".controlsRow")
+const volumeIcon=document.querySelector(".volumeIcon")
+
+let lastVolume=volume ? volume.value/100 : 1
 
 updateSeekAppearance(0)
 updateVolumeAppearance(volume.value)
@@ -892,6 +895,23 @@ saveState()
 
 volume.addEventListener("input",handleVolumeChange)
 volume.addEventListener("change",handleVolumeChange)
+
+if(volumeIcon){
+volumeIcon.addEventListener("click",()=>{
+if(audio.muted || audio.volume===0){
+audio.muted=false
+audio.volume=lastVolume || 1
+volume.value=Math.round(audio.volume*100)
+updateVolumeAppearance(volume.value)
+}else{
+lastVolume=audio.volume || (volume.value/100) || 1
+audio.muted=true
+volume.value=0
+updateVolumeAppearance(0)
+}
+saveState()
+})
+}
 
 if(isMobile){
 audio.volume=1
