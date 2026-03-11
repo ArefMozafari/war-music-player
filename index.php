@@ -24,6 +24,10 @@ background:linear-gradient(135deg,#1db954,#1ed760);
 color:#000;
 box-shadow:0 2px 10px rgba(0,0,0,0.4);
 letter-spacing:.02em;
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:16px;
 }
 
 .container{
@@ -33,6 +37,38 @@ min-height:100vh;
 box-sizing:border-box;
 max-width:1200px;
 margin:0 auto;
+}
+
+.searchBar{
+display:flex;
+align-items:center;
+gap:8px;
+min-width:0;
+max-width:280px;
+}
+
+.searchBar input{
+flex:1;
+min-width:0;
+padding:8px 10px;
+border-radius:999px;
+border:none;
+background:rgba(0,0,0,0.25);
+color:#000;
+font-size:14px;
+box-shadow:0 0 0 1px rgba(0,0,0,0.2);
+outline:none;
+}
+
+.searchBar input::placeholder{
+color:rgba(0,0,0,0.5);
+}
+
+.searchInfo{
+font-size:13px;
+opacity:.85;
+color:#b3b3b3;
+margin:0 0 12px 0;
 }
 
 .loading{
@@ -487,9 +523,15 @@ transform-origin:center;
 
 <body>
 
-<header>Music Player</header>
+<header>
+<span>Music Player</span>
+<div class="searchBar">
+<input id="searchInput" type="search" placeholder="Search by title, artist, or playlist...">
+</div>
+</header>
 
 <div class="container">
+<p id="searchInfo" class="searchInfo"></p>
 <div id="playlists">
 <div id="loading" class="loading">
 <span>Loading tracks</span>
@@ -604,6 +646,8 @@ const durationEl=document.getElementById("duration")
 const isMobile=/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.matchMedia("(max-width: 768px)").matches
 const controlsRow=document.querySelector(".controlsRow")
 const volumeIcon=document.querySelector(".volumeIcon")
+const searchInput=document.getElementById("searchInput")
+const searchInfo=document.getElementById("searchInfo")
 
 let lastVolume=volume ? volume.value/100 : 1
 
@@ -1016,7 +1060,7 @@ container.removeChild(loading)
 
 let counter=0
 
-for(let p in playlists){
+	for(let p in playlists){
 
 const playlist=document.createElement("div")
 playlist.className="playlist"
@@ -1061,10 +1105,10 @@ counter++
 
 })
 
-playlist.appendChild(header)
-playlist.appendChild(trackList)
+	playlist.appendChild(header)
+	playlist.appendChild(trackList)
 
-container.appendChild(playlist)
+	container.appendChild(playlist)
 
 }
 
@@ -1103,6 +1147,51 @@ container.appendChild(playlist)
 				}
 				img.src=src
 				img.removeAttribute("data-src")
+			}
+		})
+	}
+
+	// Attach search handler after playlists are built
+	if(searchInput){
+		searchInput.addEventListener("input",()=>{
+			const term=searchInput.value.trim().toLowerCase()
+			let matches=0
+
+			document.querySelectorAll(".playlist").forEach(pl=>{
+				let playlistHasMatch=false
+				const headerText=pl.querySelector(".playlistHeader")?.innerText.toLowerCase() || ""
+				const tracks=pl.querySelectorAll(".track")
+
+				tracks.forEach(track=>{
+					const title=track.querySelector("div > div")?.textContent.toLowerCase() || ""
+					const artist=track.querySelector("small")?.textContent.toLowerCase() || ""
+
+					if(!term || title.includes(term) || artist.includes(term) || headerText.includes(term)){
+						track.style.display=""
+						playlistHasMatch=true
+						matches++
+					}else{
+						track.style.display="none"
+					}
+				})
+
+				if(!term){
+					pl.style.display=""
+					pl.classList.remove("open")
+				}else if(playlistHasMatch){
+					pl.style.display=""
+					pl.classList.add("open")
+				}else{
+					pl.style.display="none"
+				}
+			})
+
+			if(searchInfo){
+				if(!term){
+					searchInfo.textContent=""
+				}else{
+					searchInfo.textContent=matches ? `${matches} track${matches!==1?"s":""} found` : "No matches"
+				}
 			}
 		})
 	}
