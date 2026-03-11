@@ -9,7 +9,8 @@
 <style>
 
 body{
-background:#000;
+background:radial-gradient(ellipse 120% 80% at 20% 0%,#272727 0%,#121212 40%,#0a0a0a 70%,#000 100%);
+min-height:100vh;
 color:#fff;
 font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
 margin:0;
@@ -21,8 +22,8 @@ padding:16px 24px;
 font-size:22px;
 font-weight:700;
 background:linear-gradient(135deg,#1db954,#1ed760);
-color:#000;
-box-shadow:0 2px 10px rgba(0,0,0,0.4);
+color:#fff;
+box-shadow:0 2px 12px rgba(0,0,0,0.25);
 letter-spacing:.02em;
 display:flex;
 align-items:center;
@@ -32,7 +33,7 @@ gap:16px;
 
 .container{
 padding:16px 24px 100px;
-background:radial-gradient(circle at top left,#272727 0,#121212 45%,#000 100%);
+background:transparent;
 min-height:100vh;
 box-sizing:border-box;
 max-width:1200px;
@@ -53,15 +54,15 @@ min-width:0;
 padding:8px 10px;
 border-radius:999px;
 border:none;
-background:rgba(0,0,0,0.25);
-color:#000;
+background:rgba(255,255,255,0.2);
+color:#fff;
 font-size:14px;
-box-shadow:0 0 0 1px rgba(0,0,0,0.2);
+box-shadow:0 0 0 1px rgba(255,255,255,0.2);
 outline:none;
 }
 
 .searchBar input::placeholder{
-color:rgba(0,0,0,0.5);
+color:rgba(255,255,255,0.6);
 }
 
 .searchInfo{
@@ -118,12 +119,12 @@ font-weight:600;
 
 .arrow{
 transition:transform .2s;
-opacity:.7;
+opacity:.25;
 }
 
 .playlist.open .arrow{
 transform:rotate(90deg);
-opacity:1;
+opacity:0.75;
 }
 
 .trackList{
@@ -526,7 +527,7 @@ transform-origin:center;
 <header>
 <span>Music Player</span>
 <div class="searchBar">
-<input id="searchInput" type="search" placeholder="Search by title, artist, or playlist...">
+<input id="searchInput" type="search" placeholder="Search...">
 </div>
 </header>
 
