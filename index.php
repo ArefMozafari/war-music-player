@@ -1037,19 +1037,19 @@ playlists[p].forEach((t)=>{
 
 queue.push({...t,playlist,playlistName:p})
 
-const row=document.createElement("div")
-row.className="track"
-row.dataset.index=counter
+		const row=document.createElement("div")
+		row.className="track"
+		row.dataset.index=counter
 
-let rowCover=t.cover || "placeholder.svg"
-if(rowCover.charAt(0)==="/"){rowCover="."+rowCover}
-row.innerHTML=`
-<img src="${rowCover}" onerror="this.onerror=null;this.src='placeholder.svg';">
-<div>
-<div>${t.title}</div>
-<small>${t.artist}</small>
-</div>
-`
+		let rowCover=t.cover || "placeholder.svg"
+		if(rowCover.charAt(0)==="/"){rowCover="."+rowCover}
+		row.innerHTML=`
+		<img src="placeholder.svg" data-src="${rowCover}">
+		<div>
+		<div>${t.title}</div>
+		<small>${t.artist}</small>
+		</div>
+		`
 
 row.onclick=()=>{
 play(parseInt(row.dataset.index))
@@ -1068,7 +1068,46 @@ container.appendChild(playlist)
 
 }
 
-restoreState()
+	// Lazy-load track cover images when they appear in view
+	const lazyImages=document.querySelectorAll('img[data-src]')
+	if("IntersectionObserver" in window){
+		const imgObserver=new IntersectionObserver((entries,observer)=>{
+			entries.forEach(entry=>{
+				if(entry.isIntersecting){
+					const img=entry.target
+					const src=img.getAttribute("data-src")
+					if(src){
+						img.onerror=function(){
+							this.onerror=null
+							this.src="placeholder.svg"
+						}
+						img.src=src
+						img.removeAttribute("data-src")
+					}
+					observer.unobserve(img)
+				}
+			})
+		},{
+			root:null,
+			rootMargin:"100px 0px",
+			threshold:0.01
+		})
+		lazyImages.forEach(img=>imgObserver.observe(img))
+	}else{
+		lazyImages.forEach(img=>{
+			const src=img.getAttribute("data-src")
+			if(src){
+				img.onerror=function(){
+					this.onerror=null
+					this.src="placeholder.svg"
+				}
+				img.src=src
+				img.removeAttribute("data-src")
+			}
+		})
+	}
+
+	restoreState()
 
 })
 
