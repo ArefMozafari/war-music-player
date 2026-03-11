@@ -452,7 +452,7 @@ right:0;
 padding:40px 32px 32px;
 background:radial-gradient(circle at top left,#1f1f1f 0%,var(--fullscreen-end-color,#0a0a0a) 50%,#000 100%);
 align-items:center;
-justify-content:space-between;
+justify-content:space-evenly;
 }
 
 .player.fullscreen .nowPlaying{
