@@ -450,7 +450,7 @@ bottom:0;
 left:0;
 right:0;
 padding:40px 32px 32px;
-background:radial-gradient(circle at top left,#1f1f1f 0,#000 60%);
+background:radial-gradient(circle at top left,#1f1f1f 0%,var(--fullscreen-end-color,#0a0a0a) 50%,#000 100%);
 align-items:center;
 justify-content:space-between;
 }
@@ -649,8 +649,52 @@ const controlsRow=document.querySelector(".controlsRow")
 const volumeIcon=document.querySelector(".volumeIcon")
 const searchInput=document.getElementById("searchInput")
 const searchInfo=document.getElementById("searchInfo")
+const playerEl=document.querySelector(".player")
 
 let lastVolume=volume ? volume.value/100 : 1
+
+function getDominantColorFromImage(img,cb){
+if(!img||!img.complete||img.naturalWidth===0){cb(null);return}
+const canvas=document.createElement("canvas")
+const size=32
+canvas.width=size
+canvas.height=size
+const ctx=canvas.getContext("2d")
+if(!ctx){cb(null);return}
+try{
+ctx.drawImage(img,0,0,size,size)
+const data=ctx.getImageData(0,0,size,size).data
+let r=0,g=0,b=0,count=0
+for(let i=0;i<data.length;i+=4){
+r+=data[i]
+g+=data[i+1]
+b+=data[i+2]
+count++
+}
+if(count===0){cb(null);return}
+r=Math.round(r/count)
+g=Math.round(g/count)
+b=Math.round(b/count)
+const luminance=0.2126*r+0.7152*g+0.0722*b
+const darken=Math.max(0.3,1-luminance/400)
+r=Math.round(r*darken)
+g=Math.round(g*darken)
+b=Math.round(b*darken)
+const hex="#"+[r,g,b].map(x=>Math.min(255,Math.max(0,x)).toString(16).padStart(2,"0")).join("")
+cb(hex)
+}catch(e){
+cb(null)
+}
+}
+
+function updateFullscreenGradient(hex){
+if(!playerEl)return
+if(hex){
+playerEl.style.setProperty("--fullscreen-end-color",hex)
+}else{
+playerEl.style.removeProperty("--fullscreen-end-color")
+}
+}
 
 updateSeekAppearance(0)
 updateVolumeAppearance(volume.value)
@@ -727,6 +771,13 @@ coverImg.src=csrc
 coverImg.onerror=function(){
 this.onerror=null
 this.src="placeholder.svg"
+}
+coverImg.onload=function(){
+if(coverImg.src&&!coverImg.src.includes("placeholder.svg")){
+getDominantColorFromImage(coverImg,updateFullscreenGradient)
+}else{
+updateFullscreenGradient(null)
+}
 }
 
 if("mediaSession" in navigator){
@@ -1247,6 +1298,13 @@ coverImg.src=csrc
 coverImg.onerror=function(){
 this.onerror=null
 this.src="placeholder.svg"
+}
+coverImg.onload=function(){
+if(coverImg.src&&!coverImg.src.includes("placeholder.svg")){
+getDominantColorFromImage(coverImg,updateFullscreenGradient)
+}else{
+updateFullscreenGradient(null)
+}
 }
 
 highlightTrack()
