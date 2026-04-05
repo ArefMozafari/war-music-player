@@ -51,18 +51,23 @@ max-width:280px;
 .searchBar input{
 flex:1;
 min-width:0;
-padding:8px 10px;
+padding:8px 12px;
 border-radius:999px;
 border:none;
-background:rgba(255,255,255,0.2);
+background:rgba(18,18,18,0.72);
 color:#fff;
 font-size:14px;
-box-shadow:0 0 0 1px rgba(255,255,255,0.2);
+box-shadow:0 0 0 2px rgba(255,255,255,0.28),inset 0 1px 0 rgba(255,255,255,0.06);
 outline:none;
 }
 
 .searchBar input::placeholder{
-color:rgba(255,255,255,0.6);
+color:rgba(255,255,255,0.5);
+}
+
+.searchBar input:focus{
+background:rgba(12,12,12,0.88);
+box-shadow:0 0 0 2px rgba(30,215,96,0.85),0 4px 14px rgba(0,0,0,0.35);
 }
 
 .searchInfo{
@@ -129,13 +134,13 @@ opacity:0.75;
 
 .trackList{
 max-height:0;
-	overflow:hidden;
+overflow:hidden;
 transition:max-height .3s ease;
 }
 
 .playlist.open .trackList{
-	max-height:500px;
-	overflow-y:auto;
+max-height:500px;
+overflow-y:auto;
 }
 
 .track{
@@ -452,7 +457,7 @@ right:0;
 padding:40px 32px 32px;
 background:radial-gradient(circle at top left,#1f1f1f 0%,var(--fullscreen-end-color,#0a0a0a) 50%,#000 100%);
 align-items:center;
-justify-content:space-evenly;
+justify-content:space-between;
 }
 
 .player.fullscreen .nowPlaying{
@@ -653,6 +658,23 @@ const playerEl=document.querySelector(".player")
 
 let lastVolume=volume ? volume.value/100 : 1
 
+function isSearchFilterActive(){
+return !!(searchInput&&searchInput.value.trim())
+}
+
+function getVisibleSearchQueueIndices(){
+const out=[]
+document.querySelectorAll(".playlist").forEach(pl=>{
+if(pl.style.display==="none") return
+pl.querySelectorAll(".track").forEach(track=>{
+if(track.style.display==="none") return
+const qi=parseInt(track.dataset.index,10)
+if(!isNaN(qi)&&queue[qi]) out.push(qi)
+})
+})
+return out
+}
+
 function getDominantColorFromImage(img,cb){
 if(!img||!img.complete||img.naturalWidth===0){cb(null);return}
 const canvas=document.createElement("canvas")
@@ -710,13 +732,13 @@ seekFill.style.width=v+"%"
 }
 
 function updateVolumeAppearance(value){
-	let v=parseFloat(value)
-	if(isNaN(v)) v=0
-	if(v<0) v=0
-	if(v>100) v=100
-	if(volume){
-		volume.style.background=`linear-gradient(to right,#1db954 0%,#1db954 ${v}%,#333 ${v}%,#333 100%)`
-	}
+let v=parseFloat(value)
+if(isNaN(v)) v=0
+if(v<0) v=0
+if(v>100) v=100
+if(volume){
+volume.style.background=`linear-gradient(to right,#1db954 0%,#1db954 ${v}%,#333 ${v}%,#333 100%)`
+}
 }
 
 function saveState(){
@@ -767,20 +789,18 @@ artistEl.innerText=queue[index].artist
 
 let csrc=queue[index].cover || "placeholder.svg"
 if(csrc.charAt(0)==="/"){csrc="."+csrc}
-function applyCoverGradient(){
-if(coverImg.src&&!coverImg.src.includes("placeholder.svg")&&coverImg.complete&&coverImg.naturalWidth>0){
+coverImg.src=csrc
+coverImg.onerror=function(){
+this.onerror=null
+this.src="placeholder.svg"
+}
+coverImg.onload=function(){
+if(coverImg.src&&!coverImg.src.includes("placeholder.svg")){
 getDominantColorFromImage(coverImg,updateFullscreenGradient)
 }else{
 updateFullscreenGradient(null)
 }
 }
-coverImg.onerror=function(){
-this.onerror=null
-this.src="placeholder.svg"
-}
-coverImg.onload=applyCoverGradient
-coverImg.src=csrc
-setTimeout(applyCoverGradient,0)
 
 if("mediaSession" in navigator){
 try{
@@ -844,6 +864,22 @@ return choices[Math.floor(Math.random()*choices.length)]
 function next(){
 
 if(shuffleMode){
+if(isSearchFilterActive()){
+const vis=getVisibleSearchQueueIndices()
+if(vis.length===0){
+play(index)
+return
+}
+if(vis.length===1){
+play(vis[0])
+return
+}
+const choices=vis.filter(i=>i!==index)
+const pick=choices.length?choices[Math.floor(Math.random()*choices.length)]:vis[0]
+index=pick
+play(index)
+return
+}
 const r=getRandomIndexInCurrentPlaylist()
 if(r!==-1){
 index=r
@@ -851,6 +887,20 @@ index=r
 index++
 if(index>=queue.length){index=0}
 }
+}else if(isSearchFilterActive()){
+const vis=getVisibleSearchQueueIndices()
+if(vis.length===0){
+play(index)
+return
+}
+let pos=vis.indexOf(index)
+if(pos===-1){
+play(vis[0])
+return
+}
+pos=(pos+1)%vis.length
+play(vis[pos])
+return
 }else{
 index++
 if(index>=queue.length){index=0}
@@ -863,6 +913,22 @@ play(index)
 function prev(){
 
 if(shuffleMode){
+if(isSearchFilterActive()){
+const vis=getVisibleSearchQueueIndices()
+if(vis.length===0){
+play(index)
+return
+}
+if(vis.length===1){
+play(vis[0])
+return
+}
+const choices=vis.filter(i=>i!==index)
+const pick=choices.length?choices[Math.floor(Math.random()*choices.length)]:vis[0]
+index=pick
+play(index)
+return
+}
 const r=getRandomIndexInCurrentPlaylist()
 if(r!==-1){
 index=r
@@ -870,6 +936,20 @@ index=r
 index--
 if(index<0){index=queue.length-1}
 }
+}else if(isSearchFilterActive()){
+const vis=getVisibleSearchQueueIndices()
+if(vis.length===0){
+play(index)
+return
+}
+let pos=vis.indexOf(index)
+if(pos===-1){
+play(vis[vis.length-1])
+return
+}
+pos=(pos-1+vis.length)%vis.length
+play(vis[pos])
+return
 }else{
 index--
 if(index<0){index=queue.length-1}
@@ -1014,7 +1094,7 @@ saveState()
 if(isMobile){
 audio.volume=1
 volume.value=100
-	updateVolumeAppearance(volume.value)
+updateVolumeAppearance(volume.value)
 const vw=document.querySelector(".volumeWrapper")
 if(vw){
 vw.style.display="none"
@@ -1114,7 +1194,7 @@ container.removeChild(loading)
 
 let counter=0
 
-	for(let p in playlists){
+for(let p in playlists){
 
 const playlist=document.createElement("div")
 playlist.className="playlist"
@@ -1135,19 +1215,19 @@ playlists[p].forEach((t)=>{
 
 queue.push({...t,playlist,playlistName:p})
 
-		const row=document.createElement("div")
-		row.className="track"
-		row.dataset.index=counter
+const row=document.createElement("div")
+row.className="track"
+row.dataset.index=counter
 
-		let rowCover=t.cover || "placeholder.svg"
-		if(rowCover.charAt(0)==="/"){rowCover="."+rowCover}
-		row.innerHTML=`
-		<img src="placeholder.svg" data-src="${rowCover}">
-		<div>
-		<div>${t.title}</div>
-		<small>${t.artist}</small>
-		</div>
-		`
+let rowCover=t.cover || "placeholder.svg"
+if(rowCover.charAt(0)==="/"){rowCover="."+rowCover}
+row.innerHTML=`
+<img src="placeholder.svg" data-src="${rowCover}">
+<div>
+<div>${t.title}</div>
+<small>${t.artist}</small>
+</div>
+`
 
 row.onclick=()=>{
 play(parseInt(row.dataset.index))
@@ -1159,98 +1239,98 @@ counter++
 
 })
 
-	playlist.appendChild(header)
-	playlist.appendChild(trackList)
+playlist.appendChild(header)
+playlist.appendChild(trackList)
 
-	container.appendChild(playlist)
+container.appendChild(playlist)
 
 }
 
-	// Lazy-load track cover images when they appear in view
-	const lazyImages=document.querySelectorAll('img[data-src]')
-	if("IntersectionObserver" in window){
-		const imgObserver=new IntersectionObserver((entries,observer)=>{
-			entries.forEach(entry=>{
-				if(entry.isIntersecting){
-					const img=entry.target
-					const src=img.getAttribute("data-src")
-					if(src){
-						img.onerror=function(){
-							this.onerror=null
-							this.src="placeholder.svg"
-						}
-						img.src=src
-						img.removeAttribute("data-src")
-					}
-					observer.unobserve(img)
-				}
-			})
-		},{
-			root:null,
-			rootMargin:"100px 0px",
-			threshold:0.01
-		})
-		lazyImages.forEach(img=>imgObserver.observe(img))
-	}else{
-		lazyImages.forEach(img=>{
-			const src=img.getAttribute("data-src")
-			if(src){
-				img.onerror=function(){
-					this.onerror=null
-					this.src="placeholder.svg"
-				}
-				img.src=src
-				img.removeAttribute("data-src")
-			}
-		})
-	}
+// Lazy-load track cover images when they appear in view
+const lazyImages=document.querySelectorAll('img[data-src]')
+if("IntersectionObserver" in window){
+const imgObserver=new IntersectionObserver((entries,observer)=>{
+entries.forEach(entry=>{
+if(entry.isIntersecting){
+const img=entry.target
+const src=img.getAttribute("data-src")
+if(src){
+img.onerror=function(){
+this.onerror=null
+this.src="placeholder.svg"
+}
+img.src=src
+img.removeAttribute("data-src")
+}
+observer.unobserve(img)
+}
+})
+},{
+root:null,
+rootMargin:"100px 0px",
+threshold:0.01
+})
+lazyImages.forEach(img=>imgObserver.observe(img))
+}else{
+lazyImages.forEach(img=>{
+const src=img.getAttribute("data-src")
+if(src){
+img.onerror=function(){
+this.onerror=null
+this.src="placeholder.svg"
+}
+img.src=src
+img.removeAttribute("data-src")
+}
+})
+}
 
-	// Attach search handler after playlists are built
-	if(searchInput){
-		searchInput.addEventListener("input",()=>{
-			const term=searchInput.value.trim().toLowerCase()
-			let matches=0
+// Attach search handler after playlists are built
+if(searchInput){
+searchInput.addEventListener("input",()=>{
+const term=searchInput.value.trim().toLowerCase()
+let matches=0
 
-			document.querySelectorAll(".playlist").forEach(pl=>{
-				let playlistHasMatch=false
-				const headerText=pl.querySelector(".playlistHeader")?.innerText.toLowerCase() || ""
-				const tracks=pl.querySelectorAll(".track")
+document.querySelectorAll(".playlist").forEach(pl=>{
+let playlistHasMatch=false
+const headerText=pl.querySelector(".playlistHeader")?.innerText.toLowerCase() || ""
+const tracks=pl.querySelectorAll(".track")
 
-				tracks.forEach(track=>{
-					const title=track.querySelector("div > div")?.textContent.toLowerCase() || ""
-					const artist=track.querySelector("small")?.textContent.toLowerCase() || ""
+tracks.forEach(track=>{
+const title=track.querySelector("div > div")?.textContent.toLowerCase() || ""
+const artist=track.querySelector("small")?.textContent.toLowerCase() || ""
 
-					if(!term || title.includes(term) || artist.includes(term) || headerText.includes(term)){
-						track.style.display=""
-						playlistHasMatch=true
-						matches++
-					}else{
-						track.style.display="none"
-					}
-				})
+if(!term || title.includes(term) || artist.includes(term) || headerText.includes(term)){
+track.style.display=""
+playlistHasMatch=true
+matches++
+}else{
+track.style.display="none"
+}
+})
 
-				if(!term){
-					pl.style.display=""
-					pl.classList.remove("open")
-				}else if(playlistHasMatch){
-					pl.style.display=""
-					pl.classList.add("open")
-				}else{
-					pl.style.display="none"
-				}
-			})
+if(!term){
+pl.style.display=""
+pl.classList.remove("open")
+}else if(playlistHasMatch){
+pl.style.display=""
+pl.classList.add("open")
+}else{
+pl.style.display="none"
+}
+})
 
-			if(searchInfo){
-				if(!term){
-					searchInfo.textContent=""
-				}else{
-					searchInfo.textContent=matches ? `${matches} track${matches!==1?"s":""} found` : "No matches"
-				}
-			}
-		})
-	}
+if(searchInfo){
+if(!term){
+searchInfo.textContent=""
+}else{
+searchInfo.textContent=matches ? `${matches} track${matches!==1?"s":""} found` : "No matches"
+}
+}
+})
+}
 
-	restoreState()
+restoreState()
 
 })
 
@@ -1275,11 +1355,11 @@ volume.value=Math.round(state.volume*100)
 audio.volume=1
 volume.value=100
 }
-		updateVolumeAppearance(volume.value)
+updateVolumeAppearance(volume.value)
 }else{
 audio.volume=1
 volume.value=100
-		updateVolumeAppearance(volume.value)
+updateVolumeAppearance(volume.value)
 }
 
 if(repeatMode){
@@ -1296,20 +1376,18 @@ artistEl.innerText=queue[index].artist
 
 let csrc=queue[index].cover || "placeholder.svg"
 if(csrc.charAt(0)==="/"){csrc="."+csrc}
-function applyCoverGradient(){
-if(coverImg.src&&!coverImg.src.includes("placeholder.svg")&&coverImg.complete&&coverImg.naturalWidth>0){
+coverImg.src=csrc
+coverImg.onerror=function(){
+this.onerror=null
+this.src="placeholder.svg"
+}
+coverImg.onload=function(){
+if(coverImg.src&&!coverImg.src.includes("placeholder.svg")){
 getDominantColorFromImage(coverImg,updateFullscreenGradient)
 }else{
 updateFullscreenGradient(null)
 }
 }
-coverImg.onerror=function(){
-this.onerror=null
-this.src="placeholder.svg"
-}
-coverImg.onload=applyCoverGradient
-coverImg.src=csrc
-setTimeout(applyCoverGradient,0)
 
 highlightTrack()
 
