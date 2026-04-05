@@ -767,18 +767,20 @@ artistEl.innerText=queue[index].artist
 
 let csrc=queue[index].cover || "placeholder.svg"
 if(csrc.charAt(0)==="/"){csrc="."+csrc}
-coverImg.src=csrc
-coverImg.onerror=function(){
-this.onerror=null
-this.src="placeholder.svg"
-}
-coverImg.onload=function(){
-if(coverImg.src&&!coverImg.src.includes("placeholder.svg")){
+function applyCoverGradient(){
+if(coverImg.src&&!coverImg.src.includes("placeholder.svg")&&coverImg.complete&&coverImg.naturalWidth>0){
 getDominantColorFromImage(coverImg,updateFullscreenGradient)
 }else{
 updateFullscreenGradient(null)
 }
 }
+coverImg.onerror=function(){
+this.onerror=null
+this.src="placeholder.svg"
+}
+coverImg.onload=applyCoverGradient
+coverImg.src=csrc
+setTimeout(applyCoverGradient,0)
 
 if("mediaSession" in navigator){
 try{
@@ -1294,18 +1296,20 @@ artistEl.innerText=queue[index].artist
 
 let csrc=queue[index].cover || "placeholder.svg"
 if(csrc.charAt(0)==="/"){csrc="."+csrc}
-coverImg.src=csrc
-coverImg.onerror=function(){
-this.onerror=null
-this.src="placeholder.svg"
-}
-coverImg.onload=function(){
-if(coverImg.src&&!coverImg.src.includes("placeholder.svg")){
+function applyCoverGradient(){
+if(coverImg.src&&!coverImg.src.includes("placeholder.svg")&&coverImg.complete&&coverImg.naturalWidth>0){
 getDominantColorFromImage(coverImg,updateFullscreenGradient)
 }else{
 updateFullscreenGradient(null)
 }
 }
+coverImg.onerror=function(){
+this.onerror=null
+this.src="placeholder.svg"
+}
+coverImg.onload=applyCoverGradient
+coverImg.src=csrc
+setTimeout(applyCoverGradient,0)
 
 highlightTrack()
 
