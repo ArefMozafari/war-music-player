@@ -1,5 +1,19 @@
-# War Music Player
+<p align="center">
+  <img src="assets/icons/php.svg" width="40" alt="PHP">
+  &nbsp;&nbsp;&nbsp;
+  <img src="assets/icons/html5.svg" width="36" alt="HTML5">
+</p>
 
+<h1 align="center">War Music Player</h1>
+
+<p align="center"><b>Self-hosted browser music player: drop MP3s into folders, get playlists, search and cover art</b></p>
+
+<p align="center">
+  <a href="https://github.com/ArefMozafari/war-music-player/releases/latest"><img src="https://img.shields.io/github/v/release/ArefMozafari/war-music-player?color=orange" alt="Release"></a>
+  <img src="https://img.shields.io/badge/php-8%2B-777BB4?logo=php&logoColor=white" alt="php 8+">
+  <img src="https://img.shields.io/badge/self--hosted-yes-success" alt="self-hosted">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
+</p>
 A self-hosted music player for your browser. Drop MP3s into folders, run one script, and
 get a searchable player with playlists and cover art.
 
